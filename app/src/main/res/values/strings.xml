@@ -10,4 +10,5 @@
     <string name="value_display">%1$s</string>
     <string name="error_no_sensor">Cannot determine light level, no sensor found!</string>
     <string name="bkgd_content_desc">widget background</string>
+    <string name="light_unit">Lux</string>
 </resources>
