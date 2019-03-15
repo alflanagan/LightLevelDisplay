@@ -1,10 +1,12 @@
 <resources>
     <string name="app_name">Light Level Display</string>
     <string name="action_settings">Settings</string>
-    <string name="main_label">Light Level</string>
+    <string name="main_label">Hi! This app doesn&#8217;t do anything, except provide an installable widget.</string>
+    <string name="main_button">Exit</string>
     <!--    <string name="tv_level_default">0 Lux</string>
     <string name="value_display">%1$s Lux</string> -->
-    <string name="tv_level_default">0</string>
+    <string name="tv_level_default" translatable="false">---</string>
+    <!-- value_display exists in case you want something in addition to a number -->
     <string name="value_display">%1$s</string>
     <string name="error_no_sensor">Cannot determine light level, no sensor found!</string>
     <string name="bkgd_content_desc">widget background</string>

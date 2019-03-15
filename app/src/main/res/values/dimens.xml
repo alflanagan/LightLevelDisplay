@@ -1,3 +1,5 @@
 <resources>
     <dimen name="fab_margin">16dp</dimen>
+    <dimen name="horiz_padding">15dp</dimen>
+    <dimen name="vert_padding">5dp</dimen>
 </resources>
