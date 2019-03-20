@@ -8,6 +8,5 @@
     android:resizeMode="none"
     android:widgetCategory="home_screen"
     >
-    <!-- we update widget in light sensor callback -->
-
+    <!-- minimum value for updatePeriodMillis is 30 minutes!! -->
 </appwidget-provider>

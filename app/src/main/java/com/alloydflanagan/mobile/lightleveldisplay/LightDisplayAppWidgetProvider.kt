@@ -1,7 +1,6 @@
 package com.alloydflanagan.mobile.lightleveldisplay
 
 import android.appwidget.AppWidgetManager
-import android.appwidget.AppWidgetProvider
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
@@ -14,7 +13,7 @@ import timber.log.Timber
 import java.text.DecimalFormat
 import kotlin.math.abs
 
-class LightDisplayAppWidgetProvider: AppWidgetProvider(), SensorEventListener {
+class LightDisplayAppWidgetProvider: LoggedAppWidgetProvider(), SensorEventListener {
     /// since sensor callback doesn't get a context, we have to keep a ref to ours
     private var myContext: Context? = null
 
@@ -25,15 +24,15 @@ class LightDisplayAppWidgetProvider: AppWidgetProvider(), SensorEventListener {
     private fun <T> errorNull(any: T?, msg: String, todo: (value: T) -> Unit) =
         if (any == null) Timber.e(msg) else todo(any)
 
-    private fun <T, U> errorNull(any: T?, any2: U?, msg: String, todo: (value: T, value2: U) -> Unit) =
-        if (any == null || any2 == null) Timber.e(msg) else todo(any, any2)
-
-    //OK this is just nuts :)
+    /**
+     * log error if any of three values are null, else call provided function with 3 arguments
+     */
     private fun <T, U, V> errorNull(any: T?, any2: U?, any3: V?, msg: String, todo: (value: T, value2: U, value3: V) -> Unit) =
         if (any == null || any2 == null || any3 == null) Timber.e(msg) else todo(any, any2, any3)
 
     // this occurs when the widget is placed
     override fun onEnabled(context: Context?) {
+         // Maybe: create a special purpose activity to act as sensor listener, callback
         errorNull(context, "Wow, enabled without a context. That'a ... awkward.")
         {
             errorNull(it.getSystemService(Context.SENSOR_SERVICE) as SensorManager?,
@@ -71,6 +70,9 @@ class LightDisplayAppWidgetProvider: AppWidgetProvider(), SensorEventListener {
         appWidgetManager.updateAppWidget(appWidgetId, views)
     }
 
+    /**
+     * We don't use updatePeriodMillis, so onUpdate() gets called when widget is started but not later
+     */
     override fun onUpdate(context: Context?, appWidgetManager: AppWidgetManager?, appWidgetIds: IntArray?) {
         errorNull (context, appWidgetManager, appWidgetIds, "onUpdate called with incomplete data!")
         { ctx: Context, mgr: AppWidgetManager, ids: IntArray -> ids.forEach { updateText(ctx, mgr, it) } }
