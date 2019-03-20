@@ -4,6 +4,7 @@
     android:minHeight="40dp"
     android:updatePeriodMillis="0"
     android:initialLayout="@layout/app_widget_layout"
+    android:previewImage="@drawable/ic_brightness_5_black_24dp"
     android:resizeMode="none"
     android:widgetCategory="home_screen"
     >
