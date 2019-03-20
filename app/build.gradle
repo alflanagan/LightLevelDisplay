@@ -31,14 +31,25 @@ android {
 
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
-    implementation "androidx.appcompat:appcompat:$appcompatVersion"
-    implementation "androidx.core:core-ktx:$coreKtxVersion"
     implementation "androidx.constraintlayout:constraintlayout:$constraintlayoutVersion"
     implementation "com.google.android.material:material:$materialVersion"
-    testImplementation "junit:junit:$junitVersion"
+
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+
+    //compatibility
+    implementation "androidx.appcompat:appcompat:$appcompatVersion"
+
+    // ktx extensions
+    implementation "androidx.core:core-ktx:$coreKtxVersion"
+
+    // better logging
+    implementation "com.jakewharton.timber:timber:$timberVersion"
+
+    // testing. can we do espresso tests?
+    testImplementation "androidx.test.ext:junit:$extJunitVersion"
     androidTestImplementation "androidx.test.ext:junit:$extJunitVersion"
     androidTestImplementation "androidx.test:runner:$testRunnverVersion"
     androidTestImplementation "androidx.test.espresso:espresso-core:$espressoVersion"
-    implementation "com.jakewharton.timber:timber:$timberVersion"
+    testImplementation 'org.jetbrains.kotlin:kotlin-test-junit:1.3.21'
+
 }
