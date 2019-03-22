@@ -14,6 +14,21 @@ import timber.log.Timber
  */
 open class LoggedAppWidgetProvider: AppWidgetProvider() {
 
+    private var enabled = setOf(Loggable.update, Loggable.receive, Loggable.restored, Loggable.enabled,
+        Loggable.disabled, Loggable.deleted, Loggable.appWidgetOptionsChanged)
+
+    fun disableLogging(vararg loggables: Loggable) {
+        enabled = enabled.minus(loggables)
+    }
+
+    fun enableLogging(vararg loggables: Loggable) {
+        enabled = enabled.plus(loggables)
+    }
+
+    fun isEnabled(loggable: Loggable): Boolean {
+        return enabled.contains(loggable)
+    }
+
     override fun onUpdate(context: Context?, appWidgetManager: AppWidgetManager?, appWidgetIds: IntArray?) {
         Timber.d("onUpdate()")
         super.onUpdate(context, appWidgetManager, appWidgetIds)
@@ -57,5 +72,11 @@ open class LoggedAppWidgetProvider: AppWidgetProvider() {
     ) {
         Timber.d("onAppWidgetOptionsChanged()")
         super.onAppWidgetOptionsChanged(context, appWidgetManager, appWidgetId, newOptions)
+    }
+
+    companion object {
+        enum class Loggable {
+            update, receive, restored, enabled, disabled, deleted, appWidgetOptionsChanged
+        }
     }
 }
