@@ -4,18 +4,52 @@ import android.appwidget.AppWidgetManager
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
-import android.hardware.Sensor
-import android.hardware.SensorEvent
-import android.hardware.SensorEventListener
-import android.hardware.SensorManager
 import android.widget.RemoteViews
 import timber.log.Timber
 import java.text.DecimalFormat
-import kotlin.math.abs
 
-class LightDisplayAppWidgetProvider: LoggedAppWidgetProvider(), SensorEventListener {
-    /// since sensor callback doesn't get a context, we have to keep a ref to ours
-    private var myContext: Context? = null
+class LightDisplayAppWidgetProvider: LoggedAppWidgetProvider() {
+
+    private var lightReading = 0.0f
+
+    private var serviceStarted = false
+
+    // seems like onReceive, onUpdate, and onDeleted are called in tests
+    override fun onReceive(context: Context?, intent: Intent?) {
+        if (intent != null) {
+            Timber.d("received Intent: $intent")
+            lightReading = intent.getFloatExtra(LightSensorService.READING_KEY, 0.0f)
+            if (context != null) triggerUpdate(context)
+        }
+        if (context != null && !serviceStarted) {
+            val startIntent = Intent(context, LightSensorService::class.java)
+            context.startService(startIntent)
+            serviceStarted = true
+        }
+        super.onReceive(context, intent)
+    }
+
+    override fun onDeleted(context: Context?, appWidgetIds: IntArray?) {
+        if (serviceStarted) {
+            val intent = Intent(context, LightSensorService::class.java)
+            context?.stopService(intent)
+            serviceStarted = false
+        }
+        super.onDeleted(context, appWidgetIds)
+    }
+
+    // but perhaps we'd better override any method that seems applicable??
+    override fun onRestored(context: Context?, oldWidgetIds: IntArray?, newWidgetIds: IntArray?) {
+        super.onRestored(context, oldWidgetIds, newWidgetIds)
+    }
+
+    override fun onEnabled(context: Context?) {
+        super.onEnabled(context)
+    }
+
+    override fun onDisabled(context: Context?) {
+        super.onDisabled(context)
+    }
 
     /**
      * Convenient functional way to do
@@ -30,40 +64,10 @@ class LightDisplayAppWidgetProvider: LoggedAppWidgetProvider(), SensorEventListe
     private fun <T, U, V> errorNull(any: T?, any2: U?, any3: V?, msg: String, todo: (value: T, value2: U, value3: V) -> Unit) =
         if (any == null || any2 == null || any3 == null) Timber.e(msg) else todo(any, any2, any3)
 
-    // this occurs when the widget is placed
-    override fun onEnabled(context: Context?) {
-         // Maybe: create a special purpose activity to act as sensor listener, callback
-        errorNull(context, "Wow, enabled without a context. That'a ... awkward.")
-        {
-            errorNull(it.getSystemService(Context.SENSOR_SERVICE) as SensorManager?,
-                "Unable to get sensor manager from system")
-            {manager ->
-                  errorNull(manager.getDefaultSensor(Sensor.TYPE_LIGHT),
-                      "Unable to get reference to light sensor!!")
-                  {
-                      manager.registerListener(this, it, SensorManager.SENSOR_DELAY_NORMAL)
-                  }
-            }
-            myContext = it
-        }
-        super.onEnabled(context)
-    }
-
-    /**
-     * Stop listening for events, and free refs
-     */
-    override fun onDisabled(context: Context?) {
-        val mgr = context?.getSystemService(Context.SENSOR_SERVICE) as SensorManager?
-        mgr?.unregisterListener(this)
-        // stored context no longer valid, free it
-        myContext = null
-        super.onDisabled(context)
-    }
-
     /**
      * Updates the text displayed by the widget with ID `appWidgetId`.
      */
-    private fun updateText(context: Context, appWidgetManager: AppWidgetManager, appWidgetId: Int) {
+    private fun updateText(context: Context, appWidgetManager: AppWidgetManager, appWidgetId: Int, lastReading: Float) {
         val views = RemoteViews(context.packageName, R.layout.app_widget_layout)
         val reading = context.getString(R.string.value_display, displayFormat.format(lastReading))
         views.setTextViewText(R.id.tvWidgetDisplay, reading)
@@ -75,12 +79,8 @@ class LightDisplayAppWidgetProvider: LoggedAppWidgetProvider(), SensorEventListe
      */
     override fun onUpdate(context: Context?, appWidgetManager: AppWidgetManager?, appWidgetIds: IntArray?) {
         errorNull (context, appWidgetManager, appWidgetIds, "onUpdate called with incomplete data!")
-        { ctx: Context, mgr: AppWidgetManager, ids: IntArray -> ids.forEach { updateText(ctx, mgr, it) } }
+        { ctx: Context, mgr: AppWidgetManager, ids: IntArray -> ids.forEach { updateText(ctx, mgr, it, 0.0f) } }
         super.onUpdate(context, appWidgetManager, appWidgetIds)
-    }
-
-    override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {
-        // don't care
     }
 
     /**
@@ -105,24 +105,7 @@ class LightDisplayAppWidgetProvider: LoggedAppWidgetProvider(), SensorEventListe
         }
     }
 
-    /**
-     * If light value has changed, update `lastReading` and trigger an update event
-     */
-    override fun onSensorChanged(event: SensorEvent?) {
-        errorNull(event?.values, "onSensorChanged called without sensor reading")
-        { values ->
-            val newLux = values[0]
-            if (newLux > 0.0f && abs(newLux - lastReading) > 0.01f) {
-                lastReading = newLux
-                errorNull(myContext?.applicationContext,
-                    "unable to get app context in onSensorChanged") { triggerUpdate(it) }
-            }
-        }
-    }
-
     companion object {
-        // instances come and go, but we need to keep this. fortunately it's the same for all instances.
-        var lastReading: Float = 723.0f
         val displayFormat = DecimalFormat("#,##0")
     }
 }
